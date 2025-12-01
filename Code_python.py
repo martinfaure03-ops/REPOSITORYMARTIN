@@ -1,83 +1,20 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Nov 17 16:13:14 2025
-
-@author: marthymgl
-"""
-
-#Utiliser une librairie qui va gérer le port-série
-
-pip install pyserial
-import serial
-import time
-
-
-
-#Mets ici le port exact trouvé dans Arduino IDE -> Tools -> Port
-
-ser = serial.Serial("/dev/cu.usbmodem34B7DA648DC82", 1000000, timeout=1)
-
-time.sleep(2)  # laisse le temps à l'Arduino de redémarrer
-
-ser.write(b"#")  # caractère de synchro
-print("Caractère '#' envoyé à l'Arduino.")
-
-while :
-    line = ser.readline().decode().strip()
-    if line:
-        print("Arduino:", line)
-        
-#%% CODE PROF
-
-serialPort = serial.Serial()
-serialPort.baudrate = 1000000
-serialPort.port = "/dev/cu.usbmodem34B7DA648DC82"
-serialPort.stopbits = serial.STOPBITS_ONE
-serialPort.bytesize = serial.EIGHTBITS
-
-try : 
-    
-    serialPort.open()
-except SerialException as serialException:
-    print(serialException)
-    
-    if (not serialPort.isOpen()) : 
-        print('Serial port not opened')
-        exit()
-        
-        try : 
-            print("Serial port opened. Write run character.")
-            cmd = "#"
-            serialPort.write(cmd.encode(encoding = "ascii"))
-            serialPort.close()
-            print("Port closed")
-            
-            except Exception as exception:
-                print ('exception occured while writing run character')
-                print(exception)
-
-
-
-#%%  IA
-
-import serial
-import time
-from serial import SerialException
+import serial                       # Bibliothèque pySerial pour gérer le port série
+import time                         # Pour les temporisations
+from serial import SerialException  # Pour gérer proprement les erreurs
 
 # ---- CONFIG ----
-PORT = "/dev/cu.usbmodem34B7DA648DC82"   # à adapter selon ton cas
-BAUDRATE = 1000000
+PORT = "/dev/cu.usbmodem34B7DA648DC82"   # À adapter selon ta machine
+BAUDRATE = 1000000                       # 1 Mbit/s (doit être identique à l'Arduino)
 
 # ---- OUVERTURE DU PORT ----
 try:
     ser = serial.Serial(
         port=PORT,
         baudrate=BAUDRATE,
-        bytesize=serial.EIGHTBITS,
-        parity=serial.PARITY_NONE,
-        stopbits=serial.STOPBITS_ONE,
-        timeout=1
+        bytesize=serial.EIGHTBITS,        # 8 bits de données
+        parity=serial.PARITY_NONE,        # Pas de parité
+        stopbits=serial.STOPBITS_ONE,     # 1 bit de stop
+        timeout=1                         # Timeout de lecture (1 seconde)
     )
     print(f"✅ Port série ouvert : {PORT}")
 except SerialException as e:
@@ -85,38 +22,19 @@ except SerialException as e:
     exit()
 
 
-# ---- SYNCHRONISATION ----
-print("➡️ Envoi du caractère de synchro '#'...")
-ser.write(b"#")   # caractère de démarrage
-time.sleep(2)
+# ---- ENVOI DU CARACTÈRE DE SYNCHRO ----
+print("➡️ Envoi du caractère de synchronisation '#' ...")
+ser.write(b"#")   # Envoi du caractère '#'
+time.sleep(1)     # On laisse un peu de temps à l'Arduino pour répondre
 
-# ---- Lecture du retour Arduino ----
+
+# ---- LECTURE DE LA RÉPONSE ARDUINO ----
+print("📥 Réponse Arduino :")
 while ser.in_waiting > 0:
-    print(ser.readline().decode(errors='ignore').strip())
+    ligne = ser.readline().decode(errors='ignore').strip()
+    if ligne:
+        print("  ", ligne)
 
-# ---- Attendre un peu avant de redémarrer ----
-print("⏳ Attente avant redémarrage (5 s)...")
-time.sleep(5)
-
-# ---- Envoi du caractère de reset ----
-print("➡️ Envoi du caractère '@' pour redémarrage (10 s)...")
-ser.write(b"@")
-
-# ---- Lire la réponse ----
-time.sleep(1)
-while ser.in_waiting > 0:
-    print(ser.readline().decode(errors='ignore').strip())
-
-# ---- Fermer le port ----
+# ---- FIN ----
 ser.close()
 print("✅ Port fermé.")
-
-        
-
-
-
-
-            
-            
-            
-           
