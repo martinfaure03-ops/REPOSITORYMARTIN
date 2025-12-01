@@ -1,52 +1,52 @@
-import serial                       # Gestion du port série
-import time                         # Temporisations
-from serial import SerialException  # Gestion propre des erreurs
+import serial
+import time
+from serial import SerialException
 
 # ---- CONFIG ----
-PORT = "/dev/cu.usbmodem34B7DA648DC82"   # À adapter selon ta machine
-BAUDRATE = 1000000                       # 1 Mbit/s (doit matcher l'Arduino)
+PORT = "/dev/cu.usbmodem34B7DA648DC82"   # à adapter
+BAUDRATE = 1000000                       # 1 Mbit/s
 
 # ---- OUVERTURE DU PORT ----
 try:
     ser = serial.Serial(
         port=PORT,
         baudrate=BAUDRATE,
-        bytesize=serial.EIGHTBITS,        # 8 bits de données
-        parity=serial.PARITY_NONE,        # sans parité
-        stopbits=serial.STOPBITS_ONE,     # 1 bit de stop
-        timeout=1                         # timeout de lecture 1 seconde
+        bytesize=serial.EIGHTBITS,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        timeout=1
     )
     print(f"✅ Port série ouvert : {PORT}")
 except SerialException as e:
     print("❌ Erreur d’ouverture du port :", e)
     exit()
 
-
-# ---- SYNCHRO AVEC '#' ----
+# ---- SYNCHRO '#' ----
 print("➡️ Envoi du caractère de synchronisation '#' ...")
-ser.write(b"#")          # envoi de '#'
-time.sleep(1)            # on laisse le temps à l'Arduino de répondre
+ser.write(b"#")
+time.sleep(1)
 
 print("📥 Réponse Arduino après synchro :")
-while ser.in_waiting > 0:
-    ligne = ser.readline().decode(errors='ignore').strip()
-    if ligne:
-        print("  ", ligne)
+for _ in range(5):  # on lit quelques lignes (temps en µs)
+    if ser.in_waiting > 0:
+        ligne = ser.readline().decode(errors='ignore').strip()
+        if ligne:
+            print("  ", ligne)
+    time.sleep(0.5)
 
-
-# ---- ENVOI DU CARACTÈRE DE RESET 's' ----
+# ---- DEMANDE DE RESET 's' ----
 print("➡️ Envoi du caractère 's' pour demander un reset (Arduino fera le reset dans 10 s)...")
-ser.write(b"s")          # caractère spécial pour STEP 2
-time.sleep(1)            # petit délai pour la réponse
+ser.write(b"s")
+time.sleep(1)
 
 print("📥 Réponse Arduino après demande de reset :")
-while ser.in_waiting > 0:
-    ligne = ser.readline().decode(errors='ignore').strip()
-    if ligne:
-        print("  ", ligne)
-
+for _ in range(10):
+    if ser.in_waiting > 0:
+        ligne = ser.readline().decode(errors='ignore').strip()
+        if ligne:
+            print("  ", ligne)
+    time.sleep(0.5)
 
 # ---- FERMETURE ----
 ser.close()
 print("✅ Port fermé.")
-
